@@ -309,6 +309,7 @@ def getUserAction(state, actionFunction):
   action = None
   while True:
     keys = graphicsUtils.wait_for_keys()
+
     if 'Up' in keys: action = 'north'
     if 'Down' in keys: action = 'south'
     if 'Left' in keys: action = 'west'

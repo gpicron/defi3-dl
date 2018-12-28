@@ -21,7 +21,9 @@ class GraphicsGridworldDisplay:
     setup(self.gridworld, size=self.size)
   
   def pause(self):
-    wait_for_keys()
+    while True:
+      keys = wait_for_keys()
+      if len(keys) > 0: break
   
   def displayValues(self, agent, currentState = None, message = 'Agent Values'):
     values = util.Counter()

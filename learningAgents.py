@@ -168,6 +168,7 @@ class ReinforcementAgent(ValueEstimationAgent):
         self.actionFn = actionFn
         self.episodesSoFar = 0
         self.accumTrainRewards = 0.0
+        self.episodesWonSoFar = 0
         self.accumTestRewards = 0.0
         self.numTraining = int(numTraining)
         self.epsilon = float(epsilon)
@@ -225,12 +226,16 @@ class ReinforcementAgent(ValueEstimationAgent):
             self.episodeStartTime = time.time()
         if not 'lastWindowAccumRewards' in self.__dict__:
             self.lastWindowAccumRewards = 0.0
+            self.lastWindowAccumWon = 0.
+
         self.lastWindowAccumRewards += state.getScore()
+        self.lastWindowAccumWon += 1. if deltaReward > 0 else 0.
     
         NUM_EPS_UPDATE = 100
         if self.episodesSoFar % NUM_EPS_UPDATE == 0:
             print ('Reinforcement Learning Status:')
             windowAvg = self.lastWindowAccumRewards / float(NUM_EPS_UPDATE)
+            windowRatioWon = self.lastWindowAccumWon / float(NUM_EPS_UPDATE)
             if self.episodesSoFar <= self.numTraining:
                 trainAvg = self.accumTrainRewards / float(self.episodesSoFar)
                 print ('\tCompleted %d out of %d training episodes' % (
@@ -243,8 +248,11 @@ class ReinforcementAgent(ValueEstimationAgent):
                 print ('\tAverage Rewards over testing: %.2f' % testAvg)
             print ('\tAverage Rewards for last %d episodes: %.2f'  % (
                     NUM_EPS_UPDATE,windowAvg))
+            print ('\tRatio won for last %d episodes: %.2f'  % (
+                NUM_EPS_UPDATE,windowRatioWon))
             print ('\tEpisode took %.2f seconds' % (time.time() - self.episodeStartTime))
             self.lastWindowAccumRewards = 0.0
+            self.lastWindowAccumWon = 0.0
             self.episodeStartTime = time.time()
     
         if self.episodesSoFar == self.numTraining:

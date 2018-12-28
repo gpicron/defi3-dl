@@ -187,3 +187,17 @@ Temporary Items
 
 /.idea/
 /.idea/vcs.xml
+/qlearningAgents.py
+A2C/
+ExperienceMemory.py
+deeplearning.py
+deeplearningAgents.py
+/valueIterationAgents.py
+!/deeplearning.py
+!/deeplearningAgents.py
+!/ExperienceMemory.py
+!/A2C/
+data/
+model.svg
+/data-aac/
+/data-aac-uas/

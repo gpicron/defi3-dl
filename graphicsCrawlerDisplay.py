@@ -6,7 +6,7 @@
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
-import Tkinter
+import tkinter as tk
 import qlearningAgents
 import time
 import threading
@@ -17,6 +17,9 @@ import math
 from math import pi as PI
 
 robotType = 'crawler'
+
+
+
 
 class Application:
 
@@ -70,64 +73,64 @@ class Application:
         self.setupAlphaButtonAndLabel(win)
         
         ## Exit Button ##
-        #self.exit_button = Tkinter.Button(win,text='Quit', command=self.exit)
+        #self.exit_button = tk.Button(win,text='Quit', command=self.exit)
         #self.exit_button.grid(row=0, column=9)
         
         ## Simulation Buttons ##
 #        self.setupSimulationButtons(win)
         
          ## Canvas ##
-        self.canvas = Tkinter.Canvas(root, height=200, width=1000)
+        self.canvas = tk.Canvas(root, height=200, width=1000)
         self.canvas.grid(row=2,columnspan=10)
 
     def setupAlphaButtonAndLabel(self, win):
-        self.alpha_minus = Tkinter.Button(win, 
+        self.alpha_minus = tk.Button(win, 
         text="-",command=(lambda: self.incrementAlpha(self.dec)))                
         self.alpha_minus.grid(row=1, column=3, padx=10)
         
         self.alpha = self.sigmoid(self.al)
-        self.alpha_label = Tkinter.Label(win, text='Learning Rate: %.3f' % (self.alpha))
+        self.alpha_label = tk.Label(win, text='Learning Rate: %.3f' % (self.alpha))
         self.alpha_label.grid(row=1, column=4)
         
-        self.alpha_plus = Tkinter.Button(win, 
+        self.alpha_plus = tk.Button(win, 
         text="+",command=(lambda: self.incrementAlpha(self.inc)))        
         self.alpha_plus.grid(row=1, column=5, padx=10)
 
     def setUpGammaButtonAndLabel(self, win):
-        self.gamma_minus = Tkinter.Button(win, 
+        self.gamma_minus = tk.Button(win, 
         text="-",command=(lambda: self.incrementGamma(self.dec)))                
         self.gamma_minus.grid(row=1, column=0, padx=10)
         
         self.gamma = self.sigmoid(self.ga)   
-        self.gamma_label = Tkinter.Label(win, text='Discount: %.3f' % (self.gamma))
+        self.gamma_label = tk.Label(win, text='Discount: %.3f' % (self.gamma))
         self.gamma_label.grid(row=1, column=1)
         
-        self.gamma_plus = Tkinter.Button(win, 
+        self.gamma_plus = tk.Button(win, 
         text="+",command=(lambda: self.incrementGamma(self.inc)))        
         self.gamma_plus.grid(row=1, column=2, padx=10)
 
     def setupEpsilonButtonAndLabel(self, win):
-        self.epsilon_minus = Tkinter.Button(win, 
+        self.epsilon_minus = tk.Button(win, 
         text="-",command=(lambda: self.incrementEpsilon(self.dec)))                
         self.epsilon_minus.grid(row=0, column=3)
         
         self.epsilon = self.sigmoid(self.ep)   
-        self.epsilon_label = Tkinter.Label(win, text='Epsilon: %.3f' % (self.epsilon))
+        self.epsilon_label = tk.Label(win, text='Epsilon: %.3f' % (self.epsilon))
         self.epsilon_label.grid(row=0, column=4)
         
-        self.epsilon_plus = Tkinter.Button(win, 
+        self.epsilon_plus = tk.Button(win, 
         text="+",command=(lambda: self.incrementEpsilon(self.inc)))        
         self.epsilon_plus.grid(row=0, column=5)
 
     def setupSpeedButtonAndLabel(self, win):
-        self.speed_minus = Tkinter.Button(win, 
+        self.speed_minus = tk.Button(win, 
         text="-",command=(lambda: self.incrementSpeed(.5)))                
         self.speed_minus.grid(row=0, column=0)
         
-        self.speed_label = Tkinter.Label(win, text='Step Delay: %.5f' % (self.tickTime))
+        self.speed_label = tk.Label(win, text='Step Delay: %.5f' % (self.tickTime))
         self.speed_label.grid(row=0, column=1)
         
-        self.speed_plus = Tkinter.Button(win, 
+        self.speed_plus = tk.Button(win, 
         text="+",command=(lambda: self.incrementSpeed(2)))        
         self.speed_plus.grid(row=0, column=2)
 
@@ -199,7 +202,7 @@ class Application:
             self.robotEnvironment.reset()
             state = self.robotEnvironment.getCurrentState()
             actions = self.robotEnvironment.getPossibleActions(state)        
-            print 'Reset!'
+            print ('Reset!')
         action = self.learner.getAction(state)
         if action == None:
             raise 'None action returned: Code Not Complete'
@@ -295,7 +298,7 @@ class Application:
 
 def run():
   global root
-  root = Tkinter.Tk()
+  root = tk.Tk()
   root.title( 'Crawler GUI' )
   root.resizable( 0, 0 )
 

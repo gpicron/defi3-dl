@@ -5,12 +5,15 @@
 # purposes. The Pacman AI projects were developed at UC Berkeley, primarily by
 # John DeNero (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
-
-from game import *
 from learningAgents import ReinforcementAgent
-from featureExtractors import *
 
-import random,util,math
+import util
+
+
+## NOTE: you can switch the explorationFunction by modifying code at line 52
+## the entropy based action selection requires lower epsilon, for instance
+## python pacman.py -p ApproximateQAgent -a explorationFunction=entropyGetAction,extractor=ExtendedExtractor,,epsilon=0.01 -x 100 -n 110 -l mediumClassic
+
 
 class QLearningAgent(ReinforcementAgent):
   """
