@@ -184,7 +184,8 @@ class PacmanDLAgent(DeepLearningAgent):
 
         self.action_values, self.next_short_memory = self.model.predict_action(self.state_matrices, self.short_memory)
 
-        action = self.explorationFunction.getAction(self, state)
+        #action = self.explorationFunction.getAction(self, state)
+        action = self.getPolicy(state)
         self.doAction(state, action)
 
         return action
@@ -198,7 +199,7 @@ class PacmanDLAgent(DeepLearningAgent):
         action_one_hot = to_categorical(PacmanDLAgent.action_to_i[action], len(PacmanDLAgent.actions))
 
         if reward > 20:
-            reward = 20.    # Eat ghost   (Yum! Yum!)
+            reward = 5.    # Eat ghost   (Yum! Yum!)
         elif reward > 0:
             reward = 10.    # Eat food    (Yum!)
         elif reward < -10:

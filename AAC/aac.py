@@ -5,7 +5,7 @@ import math
 import numpy as np
 from keras.constraints import MinMaxNorm, Constraint
 from keras.engine import Layer
-from keras.initializers import Ones
+from keras.initializers import Ones, Constant
 from keras.optimizers import Adam
 
 from tqdm import tqdm
@@ -142,9 +142,13 @@ class AAC:
 #        query = BatchNormalization()(query)
 #        query = Activation("relu")(query)
 
+        stddev = Dense(4, activation="relu", bias_initializer=Constant(10000))(self.knowledge)
 
+        stddev = Lambda(lambda x: K.random_normal(K.shape(x)) * x)(stddev)
 
         values = Dense(4, activation="linear")(self.knowledge)
+
+        values = Add()([values,stddev])
 
         self.prediction_model = Model([self.input_env, self.input_pos, self.input_knowledge], [values, self.knowledge])
 
