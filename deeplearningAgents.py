@@ -59,7 +59,7 @@ class PacmanDLAgent(DeepLearningAgent):
         # initialize the model
         if self.model is None:
             #matrices = self.extract_state_matrices(state)
-            matrices = self.extract_local_state_matrices(state)
+            matrices = self.extract_partial_state_matrices(state)
             self.input_size = matrices.shape
             self.model = self.algorithm.clazz()(self.output_size, self.input_size, lr=self.lr)
 
@@ -156,10 +156,6 @@ class PacmanDLAgent(DeepLearningAgent):
                 #plt.show()
                 plt.savefig("%s/a2c-%sx%s-%s-results.png" % (self.save_path, self.width, self.height, id))
 
-    def predict_with_uncertainity(self, state, n_iter=10):
-        preds = self.model.predict_with_uncertainity(np.array(self.extract_state_matrices(state)), n_iter)
-        preds = dict([(PacmanDLAgent.actions[i], (preds[0][i],preds[1][i])) for i in range(len(preds[0]))])
-        return preds
 
 
     def getPolicy(self, state):
@@ -180,7 +176,7 @@ class PacmanDLAgent(DeepLearningAgent):
         return chosen
 
     def getAction(self, state):
-        self.state_matrices = (self.extract_local_state_matrices(state), self.extract_pacman_pos(state))
+        self.state_matrices = (self.extract_partial_state_matrices(state), self.extract_pacman_pos(state))
 
         self.action_values, self.next_short_memory = self.model.predict_action(self.state_matrices, self.short_memory)
 
@@ -294,6 +290,85 @@ class PacmanDLAgent(DeepLearningAgent):
         observation[3] = getFoodMatrix(state)
         observation[4] = getCapsulesMatrix(state)
         observation[5][2][2] = 1
+
+        observation = np.swapaxes(observation, 0, 2)
+
+        return np.array(observation)
+
+    def extract_partial_state_matrices(self, state):
+        """ Return wall, ghosts, food, capsules matrices around pacman"""
+
+        def get_from_grid(grid):
+            x,y = pos
+            rx, ry = view_range
+            ox, oy = int(rx / 2),int(ry / 2)
+            matrix = np.zeros((width, height), dtype=np.int8)
+            for i in range(rx):
+                for j in range(ry):
+                    # Put cell vertically reversed in matrix
+                    at_x, at_y = x - ox + i, y - oy + j
+                    if at_x < 0 or at_x >= width or at_y < 0 or at_y >= height:
+                        continue
+                    if grid[at_x][at_y]:
+                        matrix[at_x][at_y] = 1
+            return matrix
+
+        def get_from_items(items):
+            matrix = np.zeros((width, height), dtype=np.int8)
+            x,y = pos
+            rx, ry = view_range
+            ox, oy = int(rx / 2),int(ry / 2)
+
+            for ax, ay in items:
+                rel_x, rel_y = int(ax - x + ox), int(ay - y + oy)
+                if rel_x >= 0 and rel_x < rx and rel_y >= 0 and rel_y < ry:
+                    matrix[int(ax)][int(ay)] = 1
+
+            return matrix
+
+
+        def getWallMatrix(state):
+            """ Return matrix with wall coordinates set to 1 """
+            return get_from_grid(state.data.layout.walls)
+
+        def getGhostMatrix(state):
+            """ Return matrix with ghost coordinates set to 1 """
+            items = [agentState.configuration.getPosition() for agentState in state.data.agentStates
+                     if not agentState.isPacman and not agentState.scaredTimer > 0]
+
+            return get_from_items(items)
+
+        def getScaredGhostMatrix(state):
+            """ Return matrix with ghost coordinates set to 1 """
+            items = [agentState.configuration.getPosition() for agentState in state.data.agentStates
+                     if not agentState.isPacman and agentState.scaredTimer > 0]
+
+            return get_from_items(items)
+
+        def getFoodMatrix(state):
+            """ Return matrix with food coordinates set to 1 """
+            return get_from_grid(state.data.food)
+
+        def getCapsulesMatrix(state):
+            """ Return matrix with capsule coordinates set to 1 """
+
+            return get_from_items(state.data.layout.capsules)
+
+        # Create observation matrix as a combination of
+        # wall, ghost, food and capsule matrices
+        width, height = self.width, self.height
+        pos = state.getPacmanPosition()
+        view_range = (5,5)
+        observation = np.zeros((6,width,height))
+
+        observation[0] = getWallMatrix(state)
+        observation[1] = getGhostMatrix(state)
+        observation[2] = getScaredGhostMatrix(state)
+        observation[3] = getFoodMatrix(state)
+        observation[4] = getCapsulesMatrix(state)
+        for x in range(max(0,pos[0]-2), min(width, pos[0]+3)):
+            for y in range(max(0,pos[1]-2), min(height, pos[1]+3)):
+                observation[5][x][y] = 1
 
         observation = np.swapaxes(observation, 0, 2)
 

@@ -7,6 +7,7 @@ from keras.constraints import MinMaxNorm, Constraint
 from keras.engine import Layer
 from keras.initializers import Ones, Constant
 from keras.optimizers import Adam
+import tensorflow as tf
 
 from tqdm import tqdm
 from keras.models import Model
@@ -51,6 +52,14 @@ def apply_affine(x):
 def apply_affine_output_shape(input_shapes):
     return input_shapes[0]
 
+def apply_resize(x):
+    import tensorflow as tf
+    return tf.image.resize_bicubic(
+        x,
+        (7,7),
+        align_corners=True,
+    )
+
 
 class AAC:
     """ Actor-Critic Main Algorithm
@@ -69,14 +78,21 @@ class AAC:
 
         optimizer = Adam(lr=lr)
 
-        self.train_model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
+        #run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+        #self.run_metadata = tf.RunMetadata()
+
+        self.train_model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])#,
+                                 #options = run_options,
+                                 #run_metadata = self.run_metadata)
         print(self.train_model.summary())
 
         self.prediction_model.compile(optimizer, loss="mae")
 
     def build_tower(self, frame, pose):
 
-        net = Conv2D(filters=self.r_channels // 2, kernel_size=3, strides=1, padding="same", activation="relu")(frame)
+        resized_frame = Lambda(apply_resize)(frame)
+
+        net = Conv2D(filters=self.r_channels // 2, kernel_size=3, strides=1, padding="same", activation="relu")(resized_frame)
         net = Conv2D(filters=self.r_channels, kernel_size=3, strides=1, padding="same", activation=None)(net)
         #skip1 = Conv2D(filters=self.r_channels // 2,kernel_size=1,strides=1, padding="same")(net)
         #net = Conv2D(filters=self.r_channels // 2,kernel_size=3, strides=1, padding="same", activation="relu")(net)
@@ -85,11 +101,6 @@ class AAC:
         net = BatchNormalization()(net)
         net = Activation("relu")(net)
 
-        # tile the poses to match the embedding shape
-        height, width = net.shape[1], net.shape[2]
-
-        net = ZeroPadding2D((1, 1))(net)
-        net = Lambda(apply_affine, apply_affine_output_shape)([net, pose])
 
         #pose = self.broadcast_pose(pose, height, width)
 
@@ -199,6 +210,12 @@ class AAC:
 
         result = dict([('Train_'+k, v[-1]) for (k,v) in hc.history.items()])
         result['update_rate'] = np.mean(self.update_knowledge_layer.get_weights()[0])
+
+        # from tensorflow.python.client import timeline
+        # tl = timeline.Timeline(self.run_metadata.step_stats)
+        # ctf = tl.generate_chrome_trace_format()
+        # with open('timeline.json', 'w') as f:
+        #     f.write(ctf)
 
         #write, _ = self.get_keep_write([env_view, poses, mems, 0])
 
