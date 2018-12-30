@@ -99,8 +99,7 @@ class PacmanDLAgent(DeepLearningAgent):
         next.previous = None
 
         id = self.episodesSoFar + (0 if self.load_weights is None else int(self.load_weights))
-        row = {'Episode': id, 'Score': state.getScore(), 'Steps': len(self.episode_memory), 'Reward': totalReward,
-                'epsilon': self.epsilon}
+        row = {'Episode': id, 'Score': state.getScore(), 'Steps': len(self.episode_memory), 'Reward': totalReward }
 
         batch = []
         weights = []

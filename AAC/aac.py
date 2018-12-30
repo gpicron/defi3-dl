@@ -90,9 +90,9 @@ class AAC:
 
     def build_tower(self, frame, pose):
 
-        resized_frame = Lambda(apply_resize)(frame)
+        #resized_frame = Lambda(apply_resize)(frame)
 
-        net = Conv2D(filters=self.r_channels // 2, kernel_size=3, strides=1, padding="same", activation="relu")(resized_frame)
+        net = Conv2D(filters=self.r_channels // 2, kernel_size=3, strides=1, padding="same", activation="relu")(frame)
         net = Conv2D(filters=self.r_channels, kernel_size=3, strides=1, padding="same", activation=None)(net)
         #skip1 = Conv2D(filters=self.r_channels // 2,kernel_size=1,strides=1, padding="same")(net)
         #net = Conv2D(filters=self.r_channels // 2,kernel_size=3, strides=1, padding="same", activation="relu")(net)
@@ -153,7 +153,7 @@ class AAC:
 #        query = BatchNormalization()(query)
 #        query = Activation("relu")(query)
 
-        stddev = Dense(4, activation="relu", bias_initializer=Constant(10000))(self.knowledge)
+        stddev = Dense(4, activation="relu", bias_initializer=Constant(1e100))(self.knowledge)
 
         stddev = Lambda(lambda x: K.random_normal(K.shape(x)) * x)(stddev)
 
