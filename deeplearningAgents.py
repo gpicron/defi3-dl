@@ -169,8 +169,10 @@ class PacmanDLAgent(DeepLearningAgent):
         if probs_sum == 0:
             return self.getLegalActions(state)[0]
 
-        #chosen = PacmanDLAgent.actions[np.random.choice(np.arange(self.output_size), 1, p=probs / probs_sum)[0]]
-        chosen = PacmanDLAgent.actions[np.argmax(probs)]
+        if self.isInTraining():
+            chosen = PacmanDLAgent.actions[np.random.choice(np.arange(self.output_size), 1, p=probs / probs_sum)[0]]
+        else:
+            chosen = PacmanDLAgent.actions[np.argmax(probs)]
 
         return chosen
 
