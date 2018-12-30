@@ -176,7 +176,8 @@ class PacmanDLAgent(DeepLearningAgent):
                 if p > 0.:
                     acts.append(PacmanDLAgent.actions[i])
                     acts_p.append(p/probs_sum)
-            chosen = np.random.choice(acts, 1, p=acts_p)[0]
+            acts_p = np.array(acts_p)
+            chosen = np.random.choice(acts, 1, p=acts_p/np.sum(acts_p))[0]
         else:
             chosen = PacmanDLAgent.actions[np.argmax(probs)]
 

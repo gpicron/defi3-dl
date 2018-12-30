@@ -153,7 +153,7 @@ class AAC:
 #        query = BatchNormalization()(query)
 #        query = Activation("relu")(query)
 
-        stddev = Dense(4, activation="relu", bias_initializer=Constant(1e100))(self.knowledge)
+        stddev = Dense(4, activation="relu", bias_initializer=Constant(1e10))(self.knowledge)
 
         stddev = Lambda(lambda x: K.random_normal(K.shape(x)) * x)(stddev)
 
