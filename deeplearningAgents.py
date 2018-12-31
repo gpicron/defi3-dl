@@ -32,6 +32,7 @@ class PacmanDLAgent(DeepLearningAgent):
         self.output_size = len(PacmanDLAgent.actions)
         self.replayLoss = ExperienceMemory(100000)
         self.replayWon = ExperienceMemory(100000)
+        self.replayWonGame = ExperienceMemory(100000)
         self.final_state = False
         self.model = None
         self.width = None
@@ -84,12 +85,20 @@ class PacmanDLAgent(DeepLearningAgent):
 
         next = None
 
+        gameWon = None
+
         for exp in reversed(self.episode_memory):
+            if gameWon is None:
+                gameWon = exp.gameWon
             cumul_r = exp.reward + cumul_r * self.discount
             exp.reward = cumul_r
             exp.episode = self.episodesSoFar
             exp.weight = (exp.weight - cumul_r)**2
-            if exp.reward > 0:
+            exp.gameWon = gameWon
+
+            if gameWon:
+                self.replayWonGame.append(exp)
+            elif exp.reward > 0:
                 self.replayWon.append(exp)
             else:
                 self.replayLoss.append(exp)
@@ -105,15 +114,21 @@ class PacmanDLAgent(DeepLearningAgent):
         batch = []
         weights = []
 
-        memories = [self.replayWon, self.replayLoss]
+        memories = [self.replayWon, self.replayLoss, self.replayWonGame]
 
-        max_len = np.min([len(m) for m in memories])
+        class_weights = np.array([len(m) for m in memories])
+        class_weights = np.sum(class_weights) / class_weights
+
+        max_len = 1#np.min([len(m) for m in memories])
 
         if max_len > 0:
-            for mem in memories:
-                mini_batch = mem.sample(min(max_len, 16*max(2,len(self.episode_memory))))
+            for i, mem in enumerate(memories):
+                if len(mem) == 0: continue
+
+                class_weight = class_weights[i]
+                mini_batch = mem.sample(min(len(mem), 16*max(2,len(self.episode_memory))))
                 ep = mem.last().episode
-                mini_weights = [0.999**(ep - e.episode) for e in mini_batch]
+                mini_weights = [0.999**(ep - e.episode) * class_weights for e in mini_batch]
 
                 batch.extend(mini_batch)
                 weights.extend(mini_weights)
@@ -198,20 +213,25 @@ class PacmanDLAgent(DeepLearningAgent):
 
         action_one_hot = to_categorical(PacmanDLAgent.action_to_i[action], len(PacmanDLAgent.actions))
 
+        gameWon = None
+
         if reward > 20:
             reward = 5.    # Eat ghost   (Yum! Yum!)
         elif reward > 0:
             reward = 10.    # Eat food    (Yum!)
         elif reward < -10:
             reward = -500. + len(self.episode_memory)  # Get eaten   (Ouch!) -500
+            gameWon =  False
         elif reward < 0:
             reward = 0.    # Punish time (Pff..)
         if self.final_state and reward > 0:
             reward = 500. - len(self.episode_memory)
+            gameWon = True
 
         experience = Experience(self.state_matrices, action_one_hot, nextState, reward)
         experience.internal_state = self.short_memory
         experience.weight = self.action_values[self.action_to_i[action]] #temporarly store value
+        experience.gameWon = gameWon
 
         self.episode_memory.append(experience)
 
