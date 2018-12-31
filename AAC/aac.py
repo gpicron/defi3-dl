@@ -93,7 +93,7 @@ class AAC:
         #resized_frame = Lambda(apply_resize)(frame)
 
         net = Conv2D(filters=self.r_channels // 2, kernel_size=3, strides=1, padding="same", activation="relu")(frame)
-        net = Conv2D(filters=self.r_channels, kernel_size=3, strides=1, padding="same", activation=None)(net)
+        net = Conv2D(filters=self.r_channels, kernel_size=3, strides=1, padding="valid", activation=None)(net)
         #skip1 = Conv2D(filters=self.r_channels // 2,kernel_size=1,strides=1, padding="same")(net)
         #net = Conv2D(filters=self.r_channels // 2,kernel_size=3, strides=1, padding="same", activation="relu")(net)
         #net = Add()([net,skip1])
