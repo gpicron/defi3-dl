@@ -35,7 +35,7 @@ class UpdateKnowledgeLayer(Layer): # a UpdateKnowledgeLayer layer
         self.output_dim = input_shape[1]
         w_dim = input_shape[1][1:]
         self.W = self.add_weight(name="alpha", shape=w_dim, # Create a trainable weight variable for this layer.
-                                 initializer='one', trainable=True, constraint=Between0And1())
+                                 initializer=Constant(0.5), trainable=True, constraint=Between0And1())
         super(UpdateKnowledgeLayer, self).build(input_shape)  # Be sure to call this somewhere!
 
     def call(self, x, mask=None):
@@ -153,7 +153,7 @@ class AAC:
 #        query = BatchNormalization()(query)
 #        query = Activation("relu")(query)
 
-        stddev = Dense(4, activation="relu", bias_initializer=Constant(1e10))(self.knowledge)
+        stddev = Dense(4, activation="relu", kernel_initializer="zero", bias_initializer=Constant(1e3))(self.knowledge)
 
         stddev = Lambda(lambda x: K.random_normal(K.shape(x)) * x)(stddev)
 
@@ -211,6 +211,10 @@ class AAC:
         result = dict([('Train_'+k, v[-1]) for (k,v) in hc.history.items()])
         result['update_rate'] = np.mean(self.update_knowledge_layer.get_weights()[0])
 
+        errors = self.train_model.predict(inputs, batch_size=128, verbose=0)
+        errors = np.reshape(errors,(errors.shape[0],))
+        errors = (errors - discounted_rewards)**2
+
         # from tensorflow.python.client import timeline
         # tl = timeline.Timeline(self.run_metadata.step_stats)
         # ctf = tl.generate_chrome_trace_format()
@@ -230,4 +234,4 @@ class AAC:
 
         #result.update(dict([('Train_actor_'+k, v[-1]) for (k,v) in ha.history.items()]))
 
-        return result
+        return result, errors

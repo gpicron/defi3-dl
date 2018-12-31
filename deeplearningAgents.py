@@ -30,8 +30,8 @@ class PacmanDLAgent(DeepLearningAgent):
         self.save_path = save_path
         self.load_weights = load_weights
         self.output_size = len(PacmanDLAgent.actions)
-        self.replayLoss = ExperienceMemory(1000)
-        self.replayWon = ExperienceMemory(1000)
+        self.replayLoss = ExperienceMemory(100000)
+        self.replayWon = ExperienceMemory(100000)
         self.final_state = False
         self.model = None
         self.width = None
@@ -88,6 +88,7 @@ class PacmanDLAgent(DeepLearningAgent):
             cumul_r = exp.reward + cumul_r * self.discount
             exp.reward = cumul_r
             exp.episode = self.episodesSoFar
+            exp.weight = (exp.weight - cumul_r)**2
             if exp.reward > 0:
                 self.replayWon.append(exp)
             else:
@@ -134,7 +135,11 @@ class PacmanDLAgent(DeepLearningAgent):
             actions = [e.action for e in batch]
             rewards = [e.reward for e in batch]
 
-            r = self.model.train_models(states, short_memories, actions, rewards, True, weights)
+            r, errors = self.model.train_models(states, short_memories, actions, rewards, True, weights)
+
+            for i in range(len(batch)):
+                batch[i].weight = errors[i]
+
             if r is not None:
                 row.update(r)
 
@@ -169,17 +174,8 @@ class PacmanDLAgent(DeepLearningAgent):
         if probs_sum == 0:
             return self.getLegalActions(state)[0]
 
-        if self.isInTraining():
-            acts = []
-            acts_p = []
-            for i, p in enumerate(probs):
-                if p > 0.:
-                    acts.append(PacmanDLAgent.actions[i])
-                    acts_p.append(p/probs_sum)
-            acts_p = np.array(acts_p)
-            chosen = np.random.choice(acts, 1, p=acts_p/np.sum(acts_p))[0]
-        else:
-            chosen = PacmanDLAgent.actions[np.argmax(probs)]
+        #chosen = PacmanDLAgent.actions[np.random.choice(np.arange(self.output_size), 1, p=probs / probs_sum)[0]]
+        chosen = PacmanDLAgent.actions[np.argmax(probs)]
 
         return chosen
 
@@ -215,6 +211,7 @@ class PacmanDLAgent(DeepLearningAgent):
 
         experience = Experience(self.state_matrices, action_one_hot, nextState, reward)
         experience.internal_state = self.short_memory
+        experience.weight = self.action_values[self.action_to_i[action]] #temporarly store value
 
         self.episode_memory.append(experience)
 
