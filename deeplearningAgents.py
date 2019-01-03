@@ -223,7 +223,7 @@ class PacmanDLAgent(DeepLearningAgent):
             reward = -500. + len(self.episode_memory)  # Get eaten (Ouch!) -500 but the longer pacman survives the best
             gameWon =  False
         elif reward < 0:
-            reward = -1.    # Punish time (Pff..)
+            reward = -3.    # Punish time (Pff..)
         if self.final_state and reward > 0:
             reward = 500. - len(self.episode_memory)
             gameWon = True
